@@ -10,7 +10,7 @@ import { ReactComponent as InputPlaceholder } from "./input-placeholder.svg";
 import { ReactComponent as OutputPlaceholder } from "./output-placeholder.svg";
 import { ReactComponent as ToolIdeInputDocPlaceholder } from "./tool-ide-input-document-placeholder.svg";
 import { ReactComponent as ToolIdePromptsPlaceholder } from "./tool-ide-prompts-placeholder.svg";
-import { ReactComponent as UnstractLogo } from "./Unstract.svg";
+import { ReactComponent as KoloqaiLogo } from "./Koloqai.svg";
 import { ReactComponent as ListOfWfStepsPlaceholder } from "./list-of-wf-steps-placeholder.svg";
 import { ReactComponent as ListOfToolsPlaceholder } from "./list-of-tools-placeholder.svg";
 import { ReactComponent as ApiDeployments } from "./api-deployments.svg";
@@ -23,7 +23,7 @@ import { ReactComponent as Desktop } from "./desktop.svg";
 import { ReactComponent as ReachOut } from "./reach-out.svg";
 import { ReactComponent as RequireDemoIcon } from "./require-demo.svg";
 import { ReactComponent as LearnMore } from "./learn-more.svg";
-import { ReactComponent as UnstractBlackLogo } from "./UnstractLogoBlack.svg";
+import { ReactComponent as KoloqaiBlackLogo } from "./KoloqaiLogoBlack.svg";
 import { ReactComponent as SquareBg } from "./square-bg.svg";
 import { ReactComponent as TrialDoc } from "./trial-doc.svg";
 import { ReactComponent as TextExtractorIcon } from "./text-extractor.svg";
@@ -50,7 +50,7 @@ export {
   OutputPlaceholder,
   ToolIdeInputDocPlaceholder,
   ToolIdePromptsPlaceholder,
-  UnstractLogo,
+  KoloqaiLogo,
   ListOfWfStepsPlaceholder,
   ListOfToolsPlaceholder,
   ApiDeployments,
@@ -62,7 +62,7 @@ export {
   ReachOut,
   RequireDemoIcon,
   LearnMore,
-  UnstractBlackLogo,
+  KoloqaiBlackLogo,
   SquareBg,
   TrialDoc,
   TextExtractorIcon,

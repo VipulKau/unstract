@@ -3,7 +3,7 @@ import { Button, Card, Col, Layout, Row, Space, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import logo from "../../assets/UnstractLogoBlack.svg";
+import logo from "../../assets/KoloqaiLogoBlack.svg";
 import ConnectLLM from "../../assets/connect_llm.svg";
 import ConnectVectorDb from "../../assets/connect_vector_db.svg";
 import ConnectEmbedding from "../../assets/connect_embedding.svg";

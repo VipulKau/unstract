@@ -50,19 +50,18 @@ display_banner() {
   if test $(tput cols) -ge 64; then
     echo " █████   █████"
     echo "░░███   ░░███ "
+    echo " ░██████ "
+    echo " ░███   ░███ "
     echo " ░███    ░███ "
-    echo " ░███    ░███ "
-    echo " ░███    ░███ "
-    echo " ░███    ░███ "
-    echo " ░░█████████     >UNSTRACT COMMUNITY EDITION"
-    echo "  ░░░░░░░░░   "
+    echo " ░███      ░███ "
+    echo " ░░░░░░░░░░░ ██  "   
     echo ""
     sleep 1
   fi
 }
 
 display_help() {
-  printf "Run Unstract platform in docker containers\n"
+  printf "Run Doc-iq.AI platform in docker containers\n"
   echo
   echo -e "Syntax: $0 [options]"
   echo -e "Options:"

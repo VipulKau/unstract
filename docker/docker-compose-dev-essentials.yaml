@@ -1,3 +1,7 @@
+networks:
+  unstract-network:
+    name: unstract-network
+
 services:
   db:
     image: "pgvector/pgvector:pg15"
@@ -14,6 +18,13 @@ services:
       - ./essentials.env
     labels:
       - traefik.enable=false
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U unstract_dev -d unstract_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - unstract-network
 
   redis:
     image: "redis:7.2.3"
@@ -27,6 +38,13 @@ services:
       - redis_data:/data
     labels:
       - traefik.enable=false
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - unstract-network
 
   minio:
     image: "minio/minio:latest"
@@ -62,33 +80,24 @@ services:
       - prompt_studio_data:/app/prompt-studio-data
 
   reverse-proxy:
-    # The official v2 Traefik docker image
     image: traefik:v2.10
     container_name: unstract-proxy
     restart: unless-stopped
-    # - Enables the web UI.
-    # - Tells Traefik to use docker and file providers.
-    # - Direct Traefik to the correct network for docker provider.
-    #   This is required because Traefik by default tries available networks in a
-    #   round-robin fashion. With multiple providers, services can be on multiple
-    #   networks causing 504 Gateway Timeout.
     command: --api.insecure=true
       --accesslog=true --log.level=INFO
       --providers.docker=true --providers.docker.network=unstract-network
       --providers.file.filename=/proxy_overrides.yaml --providers.file.watch=true
+      --entrypoints.web.address=:80
+      --providers.docker.exposedbydefault=false
     ports:
-      # The HTTP port
       - "80:80"
-      # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
     volumes:
-      # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock
-      # Proxy overrides for components run directly in Docker host
       - ./proxy_overrides.yaml:/proxy_overrides.yaml
-    # Since any proxy overrides need to point to Docker host for relevant routes.
+    networks:
+      - unstract-network
     extra_hosts:
-      # "host-gateway" is a special string that translates to host docker0 i/f IP.
       - "host.docker.internal:host-gateway"
 
   feature-flag:

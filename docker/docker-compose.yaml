@@ -1,6 +1,10 @@
 include:
   - docker-compose-dev-essentials.yaml
 
+networks:
+  unstract-network:
+    name: unstract-network
+
 services:
   # Backend service
   backend:
@@ -13,26 +17,43 @@ services:
     env_file:
       - ../backend/.env
     depends_on:
-      - db
-      - redis
-      - reverse-proxy
-      - minio
-      - createbuckets
-      - platform-service
-      - prompt-service
-      - x2text-service
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      reverse-proxy:
+        condition: service_started
+      minio:
+        condition: service_started
+      createbuckets:
+        condition: service_completed_successfully
+      platform-service:
+        condition: service_started
+      prompt-service:
+        condition: service_started
+      x2text-service:
+        condition: service_started
     volumes:
       - prompt_studio_data:/app/prompt-studio-data
       - ./workflow_data:/data
-      - ${TOOL_REGISTRY_CONFIG_SRC_PATH}:/data/tool_registry_config
+      - tool_registry_config:/data/tool_registry_config
     environment:
       - ENVIRONMENT=development
       - APPLICATION_NAME=unstract-backend
+      - DJANGO_SETTINGS_MODULE=backend.settings
+      - PYTHONUNBUFFERED=1
+      - DJANGO_DEBUG=True
     labels:
       - traefik.enable=true
       - traefik.http.routers.backend.rule=Host(`frontend.unstract.localhost`) && PathPrefix(`/api/v1`, `/deployment`)
+      - traefik.http.services.backend.loadbalancer.server.port=8000
+      - traefik.http.middlewares.backend-strip.stripprefix.prefixes=/api/v1
+      - traefik.http.routers.backend.middlewares=backend-strip
+      - traefik.http.routers.backend.entrypoints=web
+      - traefik.http.services.backend.loadbalancer.server.scheme=http
+    networks:
+      - unstract-network
     extra_hosts:
-      # "host-gateway" is a special string that translates to host docker0 i/f IP.
       - "host.docker.internal:host-gateway"
 
   # Celery default worker
@@ -53,7 +74,9 @@ services:
       - traefik.enable=false
     volumes:
       - ./workflow_data:/data
-      - ${TOOL_REGISTRY_CONFIG_SRC_PATH}:/data/tool_registry_config
+      - tool_registry_config:/data/tool_registry_config
+    networks:
+      - unstract-network
 
 
   # Celery worker for managing logs and periodic tasks
@@ -72,6 +95,11 @@ services:
       - APPLICATION_NAME=unstract-worker-logging
     labels:
       - traefik.enable=false
+    volumes:
+      - ./workflow_data:/data
+      - tool_registry_config:/data/tool_registry_config
+    networks:
+      - unstract-network
 
   # Celery worker for handling API deployment tasks
   worker-api-deployment:
@@ -91,7 +119,9 @@ services:
       - traefik.enable=false
     volumes:
       - ./workflow_data:/data
-      - ${TOOL_REGISTRY_CONFIG_SRC_PATH}:/data/tool_registry_config
+      - tool_registry_config:/data/tool_registry_config
+    networks:
+      - unstract-network
 
   # Celery worker for handling file processing tasks
   worker-file-processing:
@@ -111,7 +141,9 @@ services:
       - traefik.enable=false
     volumes:
       - ./workflow_data:/data
-      - ${TOOL_REGISTRY_CONFIG_SRC_PATH}:/data/tool_registry_config
+      - tool_registry_config:/data/tool_registry_config
+    networks:
+      - unstract-network
 
 
   # Celery worker for handling API file processing tasks
@@ -132,7 +164,9 @@ services:
       - traefik.enable=false
     volumes:
       - ./workflow_data:/data
-      - ${TOOL_REGISTRY_CONFIG_SRC_PATH}:/data/tool_registry_config
+      - tool_registry_config:/data/tool_registry_config
+    networks:
+      - unstract-network
 
   # Celery Flower
   celery-flower:
@@ -159,6 +193,8 @@ services:
       - unstract_data:/data
     profiles:
       - optional
+    networks:
+      - unstract-network
 
   # Celery Beat
   celery-beat:
@@ -176,6 +212,8 @@ services:
     environment:
       - ENVIRONMENT=development
       - APPLICATION_NAME=unstract-celery-beat
+    networks:
+      - unstract-network
 
   # Frontend React app
   frontend:
@@ -189,9 +227,23 @@ services:
       - reverse-proxy
     environment:
       - ENVIRONMENT=development
+      - APPLICATION_NAME=unstract-frontend
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx_cache:/var/cache/nginx
+      - nginx_temp:/var/lib/nginx
+    command: >
+      sh -c "mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp /var/cache/nginx/fastcgi_temp /var/cache/nginx/uwsgi_temp /var/cache/nginx/scgi_temp &&
+             chown -R nginx:nginx /var/cache/nginx /var/lib/nginx &&
+             nginx -g 'daemon off;'"
     labels:
       - traefik.enable=true
-      - traefik.http.routers.frontend.rule=Host(`frontend.unstract.localhost`)  && !PathPrefix(`/api/v1`, `/deployment`)
+      - traefik.http.routers.frontend.rule=Host(`frontend.unstract.localhost`)
+      - traefik.http.services.frontend.loadbalancer.server.port=3000
+      - traefik.http.routers.frontend.entrypoints=web
+      - traefik.http.services.frontend.loadbalancer.server.scheme=http
+    networks:
+      - unstract-network
 
   platform-service:
     image: unstract/platform-service:${VERSION}
@@ -206,6 +258,8 @@ services:
       - db
     labels:
       - traefik.enable=false
+    networks:
+      - unstract-network
 
   prompt-service:
     image: unstract/prompt-service:${VERSION}
@@ -224,6 +278,8 @@ services:
     extra_hosts:
       # "host-gateway" is a special string that translates to host docker0 i/f IP.
       - "host.docker.internal:host-gateway"
+    networks:
+      - unstract-network
 
   x2text-service:
     image: unstract/x2text-service:${VERSION}
@@ -237,6 +293,8 @@ services:
       - db
     labels:
       - traefik.enable=false
+    networks:
+      - unstract-network
 
   runner:
     image: unstract/runner:${VERSION}
@@ -254,13 +312,17 @@ services:
       - redis
     labels:
       - traefik.enable=false
+    networks:
+      - unstract-network
 
 volumes:
   prompt_studio_data:
   unstract_data:
-
-networks:
-  default:
-    # NOTE:
-    # Any changes need to be reflected in proxy service too.
-    name: unstract-network
+  tool_registry_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/../tool-registry/tool_registry_config
+  nginx_cache:
+  nginx_temp:

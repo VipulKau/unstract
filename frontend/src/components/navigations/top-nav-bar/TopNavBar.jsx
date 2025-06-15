@@ -22,7 +22,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import PropTypes from "prop-types";
 
-import { UnstractLogo } from "../../../assets/index.js";
+import { KoloqaiLogo } from "../../../assets/index.js";
 import {
   getBaseUrl,
   homePagePath,
@@ -87,7 +87,7 @@ const CustomLogo = ({ onClick, className }) => {
           background: "transparent",
         }}
         onError={() => {
-          // If image fails to load, component will re-render and use UnstractLogo
+          // If image fails to load, component will re-render and use KoloqaiLogo
           // since we'll set config.logoUrl to null
           if (config.logoUrl) {
             // Only modify if it's not already null to avoid infinite re-renders
@@ -97,7 +97,7 @@ const CustomLogo = ({ onClick, className }) => {
       />
     );
   }
-  return <UnstractLogo className={className} onClick={onClick} />;
+  return <KoloqaiLogo className={className} onClick={onClick} />;
 };
 let APIHubLogo;
 try {
